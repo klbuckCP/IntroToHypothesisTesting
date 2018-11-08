@@ -1,0 +1,249 @@
+---
+title: "Introduction to Hypothesis Testing In-Class Lab"
+author: "group10 ya wooo go team"
+date: "11/6/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(broom) 
+library(moderndive) # get_regression_xxx functions
+library(openintro)
+library(infer)
+
+path_to_data <- "stat312_shared/Data/cannabis_no_hybrid.csv"
+cannabis_nohybrid <- read_csv(path_to_data)
+cannabis_nohybrid %>%
+  filter(Rating > 0) -> cannabis_nohybrid
+
+store_dat <- data_frame(fresh = c(10.2,10.5,10.3,10.8,9.8,10.6,10.7,10.2,10,10.6),
+                        stored = c(9.8,9.6,10.1,10.2,10.1,9.7,9.5,9.6,9.8,9.9))
+store_dat <- store_dat %>% gather(key = 'Group', value = 'Potency')
+store_dat %>% ggplot(aes(x = Group, y = Potency)) + geom_boxplot()
+
+cannabis_use_dat <- data_frame(Gender = c(rep('Female', 1120), rep('Male', 1156)),
+                            TriedCannabis = c(rep("Yes", 445), rep("No", 675), rep("Yes", 515), rep("No", 641)))
+
+```
+
+## Marijuana Use and Gender
+
+A survey performed by Wright State university sought to determine whether there was evidence of a higher rate of cannabis use for males high school students. 
+
+To determine the answer to their research question, 1120 female and 1156 male high school students were randomly sampled and asked whether or not they had ever tried cannabis. Of the females sampled, 445 had tried cannabis. Of the males sampled, 515 had tried cannabis. 
+
++ Is this an observational study or an experiment? What are the consequences of this?
+
+**Answer:  Observational, the consequence of which is that we cannot draw a causal conclusion.**
+
++ What is the question of interest?
+
+**Answer:  Do male high school students have a higher rate of weed usage?**
+
++ What type of variables do we have? List each variable and its type. For this analysis, which variable is the **response**? Which is the **explanatory** variable?
+
+**Answer:  gender = categorical, nominal = explanatory        usage = categorical, nominal = response**
+
++ What are the appropriate parameters of interest to best answer our question of interest? Define in symbols and words?
+
+**Answer: $P_{cannabis|male}$ = The TRUE proportion of males that have tried weed
+          $P_{cannabis|female}$ = The TRUE proportion of females that have tried weed**
+
+```{r}
+cannabis_use_dat %>% 
+  ggplot(aes(x=TriedCannabis, fill=Gender)) +
+  geom_bar(position = 'dodge')
+```
+
++ In terms of our variables, what are the appropriate hypotheses to test?
+
+**Answer:  **
+
+$H_0$: cannabis usage and gender are independent
+
+$H_A$: cannabis usage and gender are not independent
+
++ In terms of our parameters of interest, what are the appropriate hypotheses to test?
+
+**Answer:  **
+
+$H_0$: $P_{cannabis|male} - P_{cannabis|female} = 0$
+
+$H_A$: $P_{cannabis|male} - P_{cannabis|female} > 0$
+
++ What is your expectation regarding the results of our test based on our visualization above?
+
+**Answer:  **
+
++ What is our statistics that estimate our parameters?
+
+**Answer:  **
+
+
+```{r warning=FALSE, message=FALSE, fig.height=2}
+# Calculate proportion in each Gender*use combo
+cannabis_use_dat %>% 
+            group_by(Gender, TriedCannabis) %>% 
+            summarize(n = n()) %>% 
+            mutate(samp_props = n/sum(n))
+```
+
+
+```{r eval=FALSE}
+
+# Observed difference in proportion
+(cannabis_use_dat %>% 
+  specify(formula = , success = '') %>% # response ~ explanatory, success = "Yes"
+  calculate(stat = "diff in props", order = c(" ", " ")) -> obs_diff_props) #specify order of difference
+
+```
+
+
+Use the `infer` package to perform the permutation based hypothesis test for the hypotheses indicated above. Template code is available for you below.
+
+```{r warning=FALSE, message=FALSE, eval=FALSE}
+
+cannabis_use_dat %>% 
+  specify(formula = , success = "") %>% # response ~ explanatory, success = "Yes"
+  hypothesize(null = 'independence') %>%
+  generate(reps = 1000, type = 'permute') %>%
+  calculate(stat = "diff in props", order = c("", "")) -> evidence #specify order of difference
+
+evidence %>%
+  visualize(obs_stat = obs_diff_prop, direction = '') # choose direction: 'greater' 'less' or 'both'
+
+evidence %>%
+  get_pvalue(obs_stat = obs_diff_prop, direction = '') # choose direction: 'greater' 'less' or 'both'
+```
+
++ What is the meaning of the p-value? At the $\alpha = 0.05$ significance level, what is our conclusion?
+
+**Answer:  **
+
++ Now suppose the research question was 'Is there evidence that cannabis use is higher for female high school students?'  Using the same data, what would our p-value be?
+
+**Answer:  **
+
+## Errors
+
++ What would be a Type 1 error in this situation?
+
+**Answer:  **
+
++ What would be a Type 2 error in this situation?
+
+**Answer:  **
+
+## Are there differences in Ratings of Cannabis by Strain Type?
+
+The dataset `cannabis.csv` contains information regarding 2,351 (only 1,309 after removing 'hybrid' varieties) reviews of cannabis flower from *leafly.com*. For our analysis, we want to determine if there are differences in typical rating for different strains of cannabis. For this analysis, we will focus on Cannabis Sativa and Cannabis Indica strains and will ignore hybrids varieties.
+
++ Is this an observational study or and experiment? What are the consequences of this?
+
+**Answer:  **
+
++ What is the question of interest?
+
+**Answer:  **
+
++ What type of variables do we have? List each variable and its type. For this analysis, which variable is the **response**? Which is the **explanatory** variable?
+
+**Answer:  **
+
++ Based on the visualization below, describe the distribution of `Rating` by strain `Type`? Are there any weird features in these data? What story does this visualization tell us about cannabis users satisfaction with different types of cannabis?
+
+**Answer: **
+
+```{r warning=FALSE, message=FALSE}
+cannabis_nohybrid %>% 
+  ggplot(aes(x = Rating)) + 
+  geom_histogram(color = 'white') + 
+  facet_grid(Type~.)
+```
+
+
+Define $\mu_{Rating|Indica}$ = the TRUE average `Rating` for cannabis plants of the Indica species and define $\mu_{Rating|Sativa}$ the TRUE average `Rating` for cannabis plants of the Sativa species
+
++ In terms of our parameter of interest, what are the appropriate hypotheses to test?
+
+**Answer:  **
+
+$H_0$: 
+
+$H_A$:
+
++ In terms of our variables, what are the appropriate hypotheses to test?
+
+**Answer:  **
+
+$H_0$: 
+
+$H_A$:
+
++ What is your expectation regarding the results of our test based on our EDA above?
+
+**Answer:  **
+
++ What are the statistics that estimate our parameters?
+
+**Answer:  **
+
+```{r}
+# Grabbing the summary statistics the old way
+cannabis_nohybrid %>% 
+  group_by(Type) %>%
+  summarize(mean_rating = mean(Rating),
+            median_rating = median(Rating))
+
+# Using Infer to grab the summary statistics
+(cannabis_nohybrid %>% 
+  specify(formula = Rating ~ Type) %>%
+  calculate(stat = "diff in means", order = c("sativa", "indica")) -> obs_diff_mean)
+
+```
+
+Use the `infer` package to perform the permutation based hypothesis test for the hypotheses indicated above. Template code is available for you below.
+
+
+```{r eval=FALSE}
+cannabis_nohybrid %>% 
+  specify(formula = ) %>% # response ~ explanatory variable
+  hypothesize(null = ) %>% # null = 'independence' when testing if two variables are independent
+  generate(reps = 1000, type = 'permute') %>% # 
+  calculate(stat = "diff in ___", order = c("sativa", "indica")) -> evidence  # 'diff in props' 'diff in means' or 'diff in medians'
+
+evidence %>%
+  visualize(obs_stat = obs_diff_mean, direction = '') # options are 'greater' 'less' or 'both'
+
+evidence %>%
+  get_pvalue(obs_stat = obs_diff_mean, direction = '')
+```
+
+
++ What is the p-value for the test? Interpret this value in context.
+
+**Answer: **
+
++ What is you conclusion at the $\alpha = 0.05$ significance level?
+
+**Answer: **
+
++ Can you think of reasons why the results here are not surprising?
+
+**Answer: **
+
+Extra Fun (optional):
+
++ What are the lowest rated Cannabis Sativa and Cannabis Indica strains? Some template code as been provided for you, just remove the `eval=FALSE` and code away.
+
+```{r eval=FALSE}
+cannabis_nohybrid %>%
+  filter() %>%
+  arrange()
+```
+
+
+
+
